@@ -1,0 +1,11 @@
+version: '3.3'
+
+services:
+  db:
+    image: postgres:14.0
+    environment:
+      POSTGRES_DB: pdp_db
+      POSTGRES_USER: db_admin
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5436:5432"

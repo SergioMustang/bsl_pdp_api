@@ -6,8 +6,19 @@ authors = ["Sergey Kobylkin <s.kobylkin@bsl.dev>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fastapi = "^0.78.0"
+fastapi = "^0.81.0"
 uvicorn = "^0.18.2"
+python-dotenv = "^0.20.0"
+python-multipart = "^0.0.5"
+SQLAlchemy = "^1.4.39"
+psycopg2-binary = "^2.9.3"
+alembic = "^1.8.1"
+pytz = "^2022.2.1"
+passlib = "^1.7.4"
+PyJWT = "^2.4.0"
+pydantic = {extras = ["email"], version = "^1.9.2"}
+redis = "^4.3.4"
+fastapi-pagination = "^0.10.0"
 
 [tool.poetry.dev-dependencies]
 
