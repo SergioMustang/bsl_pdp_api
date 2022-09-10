@@ -16,7 +16,8 @@ from app import (
 from app.core import exceptions
 from app.core.settings import settings
 from app.schemas.user import UserOutputSchema, TokenSchema
-
+from mq import send_json_message
+from asyncio.exceptions import TimeoutError
 
 auth_router = APIRouter(
     prefix=f'/api/{settings.PROJECT_URL_PREFIX}/auth/v1',
@@ -29,12 +30,17 @@ auth_router = APIRouter(
     summary='Вход пользователя',
     response_model=TokenSchema,
 )
-def login(
+async def login(
     login_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
     user = utils.auth_user(login=login_data.username, password=login_data.password, db=db)
     access_token, refresh_token = utils.create_token_pair(user_id=user.id)
+    user_scheme_obj = UserOutputSchema.from_orm(user)
+    try:
+        await send_json_message(subject='auth', json_obj=user_scheme_obj)
+    except TimeoutError:
+        pass
     return schemas.user.TokenSchema(access_token=access_token, refresh_token=refresh_token)
 
 
