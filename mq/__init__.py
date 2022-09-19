@@ -12,9 +12,19 @@ def get_url():
     return f"nats://{host}:{port}"
 
 
-async def send_json_message(subject, json_obj):
-    json_obj_serialized = json_obj.json(ensure_ascii=False)
-    nc = await asyncio.wait_for(nats.connect(get_url()), timeout=2)
-    await nc.publish(subject, bytes(json_obj_serialized, encoding='utf-8'))
-    await nc.drain()
+class NatsQuery:
+
+    async def __aenter__(self):
+        self.nc = await asyncio.wait_for(nats.connect(get_url()), timeout=2)
+        return self
+
+    async def __aexit__(self, *args):
+        self.nc.drain()
+
+    async def send_json_message(self, subject, json_obj):
+        json_obj_serialized = json_obj.json(ensure_ascii=False)
+        await self.nc.publish(subject, bytes(json_obj_serialized, encoding='utf-8'))
+
+
+
 

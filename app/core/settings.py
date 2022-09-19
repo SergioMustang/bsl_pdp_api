@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # JWT
     JWT_SECRET: str = os.getenv('JWT_SECRET', 'secret')
-    JWT_ACCESS_EXPIRE_MINUTES: int = os.getenv('JWT_ACCESS_EXPIRE_MINUTES', 15)
+    JWT_ACCESS_EXPIRE_MINUTES: int = os.getenv('JWT_ACCESS_EXPIRE_MINUTES', 60)
     JWT_REFRESH_EXPIRE_MINUTES: int = os.getenv('JWT_REFRESH_EXPIRE_MINUTES', 30 * 60 * 24)
     JWT_ALGORITHM: str = os.getenv('JWT_ALGORITHM', 'HS256')
 

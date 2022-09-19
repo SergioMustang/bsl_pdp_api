@@ -25,6 +25,7 @@ from app.utils import (
 from app.core.settings import settings
 from app.services.user_service import UserService
 from app.permissions import Permissions
+from mq import NatsQuery
 
 user_router = APIRouter(
     prefix=f'/api/{settings.PROJECT_URL_PREFIX}/user/v1',
@@ -37,12 +38,18 @@ user_router = APIRouter(
     summary='Добавление пользователя',
     response_model=UserOutputSchema,
 )
-def add_user(
+async def add_user(
         user_create: UserCreateSchema,
         user=Depends(PermissionValidator([Permissions.USER_MANAGEMENT])),
         db: Session = Depends(get_db),
 ):
     user_obj = UserService(db).create_user(user_create)
+    user_scheme_obj = UserOutputSchema.from_orm(user_obj)
+    try:
+        async with NatsQuery() as nc:
+            await nc.send_json_message(subject='reg', json_obj=user_scheme_obj)
+    except Exception as e:
+        pass
     return user_obj
 
 
@@ -70,7 +77,6 @@ def update_user(
         user=Depends(PermissionValidator([Permissions.USER_MANAGEMENT])),
         db: Session = Depends(get_db),
 ):
-
     return UserService(db).update_user(user_id, data_for_update)
 
 
@@ -84,7 +90,6 @@ def get_user(
         user=Depends(PermissionValidator([Permissions.USER_MANAGEMENT])),
         db: Session = Depends(get_db),
 ):
-
     return UserService(db).get_user(user_id)
 
 
@@ -94,15 +99,14 @@ def get_user(
     response_model=Paginate[UserOutputSchema],
 )
 def get_users(
-    params: ModifiedParams,
-    user=Depends(get_current_user),
-    search: Optional[str] = Body(None),
-    filters: Optional[UserFiltersSchema] = Body(None),
-    ordering: Optional[UserOrderingSchema] = Body(None),
-    db: Session = Depends(get_db),
+        params: ModifiedParams,
+        user=Depends(get_current_user),
+        search: Optional[str] = Body(None),
+        filters: Optional[UserFiltersSchema] = Body(None),
+        ordering: Optional[UserOrderingSchema] = Body(None),
+        db: Session = Depends(get_db),
 
 ):
-
     return paginate(
         sequence=UserService(db).get_users(search, filters, ordering),
         params=params,

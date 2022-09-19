@@ -16,7 +16,7 @@ from app import (
 from app.core import exceptions
 from app.core.settings import settings
 from app.schemas.user import UserOutputSchema, TokenSchema
-from mq import send_json_message
+from mq import NatsQuery
 from asyncio.exceptions import TimeoutError
 
 auth_router = APIRouter(
@@ -38,8 +38,9 @@ async def login(
     access_token, refresh_token = utils.create_token_pair(user_id=user.id)
     user_scheme_obj = UserOutputSchema.from_orm(user)
     try:
-        await send_json_message(subject='auth', json_obj=user_scheme_obj)
-    except TimeoutError:
+        async with NatsQuery() as nc:
+            await nc.send_json_message(subject='auth', json_obj=user_scheme_obj)
+    except Exception as e:
         pass
     return schemas.user.TokenSchema(access_token=access_token, refresh_token=refresh_token)
 
